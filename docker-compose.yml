@@ -1,0 +1,71 @@
+version: "3.9"
+
+# ============================================================
+# AI Project — Docker Compose (3 services)
+# Run: docker-compose up --build
+# ============================================================
+
+services:
+
+  # ── Service A: Frontend / API Gateway (Pod 1) ────────────
+  app-service-a:
+    build:
+      context: ./app-service-a
+      dockerfile: Dockerfile
+    container_name: service-a
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      - app-service-b
+    networks:
+      - ai-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Service B: Backend / Business Logic (Pod 2) ──────────
+  app-service-b:
+    build:
+      context: ./app-service-b
+      dockerfile: Dockerfile
+    container_name: service-b
+    ports:
+      - "8001:8001"
+    env_file: .env
+    networks:
+      - ai-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── AI Bot: LangChain Agent + JIRA + AWS SES (Pod 3) ─────
+  ai-bot:
+    build:
+      context: ./ai-bot
+      dockerfile: Dockerfile
+    container_name: ai-bot
+    ports:
+      - "8002:8002"
+    env_file: .env
+    depends_on:
+      - app-service-a
+      - app-service-b
+    networks:
+      - ai-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  ai-net:
+    driver: bridge

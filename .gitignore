@@ -1,0 +1,31 @@
+# Secrets
+.env
+*.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Robocorp
+output/
+.robocorp/
+rcc
+.o365_token
+
+# Docker
+*.log
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# macOS
+.DS_Store

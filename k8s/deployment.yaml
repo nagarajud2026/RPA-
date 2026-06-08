@@ -1,0 +1,148 @@
+# ============================================================
+# Kubernetes Deployment — All 3 Services
+# Phase 3: Deploy to AWS EKS
+# Apply: kubectl apply -f k8s/deployment.yaml
+# ============================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-project
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ai-project-secrets
+  namespace: ai-project
+type: Opaque
+stringData:
+  ANTHROPIC_API_KEY: "YOUR_ANTHROPIC_API_KEY"
+  JIRA_URL: "https://yourcompany.atlassian.net"
+  JIRA_EMAIL: "you@yourcompany.com"
+  JIRA_API_TOKEN: "YOUR_JIRA_API_TOKEN"
+  JIRA_PROJECT_KEY: "PROJ"
+  AWS_ACCESS_KEY_ID: "YOUR_AWS_ACCESS_KEY_ID"
+  AWS_SECRET_ACCESS_KEY: "YOUR_AWS_SECRET_ACCESS_KEY"
+  AWS_REGION: "ap-south-1"
+  SES_SENDER_EMAIL: "you@yourcompany.com"
+  SES_RECIPIENT_EMAIL: "recipient@yourcompany.com"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-a
+  namespace: ai-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-a
+  template:
+    metadata:
+      labels:
+        app: service-a
+    spec:
+      containers:
+        - name: service-a
+          image: YOUR_ECR_REPO/service-a:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: ai-project-secrets
+          env:
+            - name: SERVICE_B_URL
+              value: "http://service-b:8001"
+            - name: AI_BOT_URL
+              value: "http://ai-bot:8002"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-a
+  namespace: ai-project
+spec:
+  selector:
+    app: service-a
+  ports:
+    - port: 8000
+      targetPort: 8000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-b
+  namespace: ai-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-b
+  template:
+    metadata:
+      labels:
+        app: service-b
+    spec:
+      containers:
+        - name: service-b
+          image: YOUR_ECR_REPO/service-b:latest
+          ports:
+            - containerPort: 8001
+          envFrom:
+            - secretRef:
+                name: ai-project-secrets
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-b
+  namespace: ai-project
+spec:
+  selector:
+    app: service-b
+  ports:
+    - port: 8001
+      targetPort: 8001
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-bot
+  namespace: ai-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-bot
+  template:
+    metadata:
+      labels:
+        app: ai-bot
+    spec:
+      containers:
+        - name: ai-bot
+          image: YOUR_ECR_REPO/ai-bot:latest
+          ports:
+            - containerPort: 8002
+          envFrom:
+            - secretRef:
+                name: ai-project-secrets
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-bot
+  namespace: ai-project
+spec:
+  selector:
+    app: ai-bot
+  ports:
+    - port: 8002
+      targetPort: 8002

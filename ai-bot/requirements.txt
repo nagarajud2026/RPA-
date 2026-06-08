@@ -1,0 +1,13 @@
+langchain==0.3.25
+langchain-groq==0.2.4
+langchain-community==0.3.24
+langchain-core==0.3.59
+jira==3.8.0
+boto3==1.34.144
+fastapi==0.111.1
+uvicorn==0.30.1
+python-dotenv==1.0.1
+requests==2.32.3
+pydantic==2.8.2
+robocorp==1.4.3
+robocorp-tasks==2.9.3

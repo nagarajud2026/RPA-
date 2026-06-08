@@ -1,0 +1,28 @@
+tasks:
+  Run AI Agent:
+    shell: python -m robocorp.tasks run tasks/run_agent.py -t run_ai_agent
+
+  Test JIRA Only:
+    shell: python -m robocorp.tasks run tasks/run_agent.py -t test_jira_only
+
+  Test Email Only:
+    shell: python -m robocorp.tasks run tasks/run_agent.py -t test_email_only
+
+  Test Full Flow:
+    shell: python -m robocorp.tasks run tasks/run_agent.py -t test_full_flow
+
+  Run AI Bot Server:
+    shell: python -m uvicorn main:app --host 0.0.0.0 --port 8002
+
+condaConfigFile: conda.yaml
+
+environmentConfigs:
+  - conda.yaml
+
+artifactsDir: output
+
+PATH:
+  - .
+
+PYTHONPATH:
+  - .
