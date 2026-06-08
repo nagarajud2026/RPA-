@@ -1,31 +1,9 @@
-# Secrets
+﻿# Create .gitignore to avoid pushing .env files with your secrets
+@"
 .env
 *.env
-.env.*
-
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-.venv/
-venv/
-env/
-*.egg-info/
-dist/
-build/
-
-# Robocorp
 output/
-.robocorp/
-rcc
-.o365_token
-
-# Docker
-*.log
-
-# VS Code
-.vscode/
-*.code-workspace
-
-# macOS
-.DS_Store
+__pycache__/
+*.pyc
+.rpa/
+"@ | Out-File -FilePath .gitignore -Encoding utf8
