@@ -21,9 +21,13 @@ from dotenv import load_dotenv
 
 def load_secrets():
     """
-    Load secrets from Robocorp Vault if running in Control Room,
-    fallback to .env file for local development.
+    Load secrets - 4 ways in order:
+    1. Robocorp Vault
+    2. Control Room Environment Variables
+    3. .env file
+    4. Hardcoded fallback (permanent fix for Control Room)
     """
+    # Way 1 — Try Robocorp Vault
     try:
         from robocorp import vault
         secrets = vault.get_secret("ai-bot-secrets")
@@ -32,11 +36,35 @@ def load_secrets():
         print("INFO: Secrets loaded from Robocorp Vault")
         return
     except Exception as e:
-        print("INFO: Vault not available (expected locally): " + str(e))
+        print("INFO: Vault not available: " + str(e))
 
-    # Fallback to .env for local development
+    # Way 2 — Check Control Room Environment Variables
+    if os.environ.get("JIRA_URL") and os.environ.get("GROQ_API_KEY"):
+        print("INFO: Secrets loaded from Environment Variables")
+        return
+
+    # Way 3 — Try .env file
     load_dotenv()
-    print("INFO: Secrets loaded from .env file")
+    if os.environ.get("JIRA_URL") and os.environ.get("GROQ_API_KEY"):
+        print("INFO: Secrets loaded from .env file")
+        return
+
+    # Way 4 — Hardcoded fallback (permanent fix)
+    # ============================================================
+    # FILL IN YOUR REAL VALUES BELOW
+    # ============================================================
+    print("INFO: Loading hardcoded credentials")
+    os.environ.setdefault("GROQ_API_KEY",          "FILL_YOUR_GROQ_API_KEY")
+    os.environ.setdefault("JIRA_URL",              "https://itscatsolverminds.atlassian.net")
+    os.environ.setdefault("JIRA_EMAIL",            "dasari.nagaraju@solverminds.com")
+    os.environ.setdefault("JIRA_API_TOKEN",        "FILL_YOUR_JIRA_API_TOKEN")
+    os.environ.setdefault("JIRA_PROJECT_KEY",      "FILL_YOUR_PROJECT_KEY")
+    os.environ.setdefault("AWS_ACCESS_KEY_ID",     "FILL_YOUR_AWS_ACCESS_KEY_ID")
+    os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "FILL_YOUR_AWS_SECRET_ACCESS_KEY")
+    os.environ.setdefault("AWS_REGION",            "ap-south-1")
+    os.environ.setdefault("SES_SENDER_EMAIL",      "dasari.nagaraju@solverminds.com")
+    os.environ.setdefault("SES_RECIPIENT_EMAIL",   "FILL_YOUR_GMAIL")
+    print("INFO: Hardcoded credentials loaded successfully")
 
 
 def extract_output(result: dict) -> str:
@@ -121,7 +149,7 @@ def test_jira_only():
     if "Key:" in result or "created" in result.lower():
         print("\nPASSED - JIRA credentials are correct")
     else:
-        print("\nFAILED - check credentials in Control Room Vault")
+        print("\nFAILED - check credentials in Control Room")
         raise RuntimeError("JIRA smoke test failed: " + result)
 
 
@@ -162,7 +190,7 @@ def test_email_only():
     if "Message ID" in result:
         print("\nPASSED - AWS SES email sent successfully")
     else:
-        print("\nFAILED - check AWS credentials in Control Room Vault")
+        print("\nFAILED - check AWS credentials")
         raise RuntimeError("AWS SES smoke test failed: " + result)
 
 
@@ -208,6 +236,6 @@ def test_full_flow():
     print("=" * 60)
 
     if not jira_ok or not email_ok:
-        raise RuntimeError("One or more smoke tests failed. Check credentials in Control Room Vault")
+        raise RuntimeError("One or more smoke tests failed.")
 
     print("\nALL SMOKE TESTS PASSED from Control Room!")
