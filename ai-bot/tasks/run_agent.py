@@ -21,11 +21,10 @@ from dotenv import load_dotenv
 
 def load_secrets():
     """
-    Load secrets - 4 ways in order:
-    1. Robocorp Vault
-    2. Control Room Environment Variables
-    3. .env file
-    4. Hardcoded fallback (permanent fix for Control Room)
+    Load secrets - 3 ways in order:
+    1. Robocorp Vault     (Control Room with Vault configured)
+    2. Environment Vars   (Control Room Process Environment Variables)
+    3. .env file          (local development)
     """
     # Way 1 — Try Robocorp Vault
     try:
@@ -39,32 +38,19 @@ def load_secrets():
         print("INFO: Vault not available: " + str(e))
 
     # Way 2 — Check Control Room Environment Variables
+    # These are set permanently in Process -> Configure -> Steps -> Environment Variables
     if os.environ.get("JIRA_URL") and os.environ.get("GROQ_API_KEY"):
-        print("INFO: Secrets loaded from Environment Variables")
+        print("INFO: Secrets loaded from Control Room Environment Variables")
         return
 
-    # Way 3 — Try .env file
+    # Way 3 — Fallback to .env file for local development
     load_dotenv()
-    if os.environ.get("JIRA_URL") and os.environ.get("GROQ_API_KEY"):
+    if os.environ.get("JIRA_URL"):
         print("INFO: Secrets loaded from .env file")
         return
 
-    # Way 4 — Hardcoded fallback (permanent fix)
-    # ============================================================
-    # FILL IN YOUR REAL VALUES BELOW
-    # ============================================================
-    print("INFO: Loading hardcoded credentials")
-    os.environ.setdefault("GROQ_API_KEY",          "FILL_YOUR_GROQ_API_KEY")
-    os.environ.setdefault("JIRA_URL",              "https://itscatsolverminds.atlassian.net")
-    os.environ.setdefault("JIRA_EMAIL",            "dasari.nagaraju@solverminds.com")
-    os.environ.setdefault("JIRA_API_TOKEN",        "FILL_YOUR_JIRA_API_TOKEN")
-    os.environ.setdefault("JIRA_PROJECT_KEY",      "FILL_YOUR_PROJECT_KEY")
-    os.environ.setdefault("AWS_ACCESS_KEY_ID",     "FILL_YOUR_AWS_ACCESS_KEY_ID")
-    os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "FILL_YOUR_AWS_SECRET_ACCESS_KEY")
-    os.environ.setdefault("AWS_REGION",            "ap-south-1")
-    os.environ.setdefault("SES_SENDER_EMAIL",      "dasari.nagaraju@solverminds.com")
-    os.environ.setdefault("SES_RECIPIENT_EMAIL",   "FILL_YOUR_GMAIL")
-    print("INFO: Hardcoded credentials loaded successfully")
+    print("ERROR: No credentials found in Vault, Env Vars, or .env file")
+    print("ERROR: Add credentials in Control Room Process -> Configure -> Environment Variables")
 
 
 def extract_output(result: dict) -> str:
@@ -190,7 +176,7 @@ def test_email_only():
     if "Message ID" in result:
         print("\nPASSED - AWS SES email sent successfully")
     else:
-        print("\nFAILED - check AWS credentials")
+        print("\nFAILED - check AWS credentials in Control Room")
         raise RuntimeError("AWS SES smoke test failed: " + result)
 
 
