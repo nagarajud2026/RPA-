@@ -50,12 +50,14 @@ app = FastAPI(
 
 
 def build_agent() -> AgentExecutor:
-    """Build and return the LangChain agent."""
-
+    """
+    Build and return the LangChain agent.
+    Called at FastAPI startup AND by Robocorp tasks after secrets are loaded.
+    """
     groq_api_key = os.environ.get("GROQ_API_KEY")
     if not groq_api_key:
         raise EnvironmentError(
-            "GROQ_API_KEY not set in .env. "
+            "GROQ_API_KEY not set. "
             "Get free key from: https://console.groq.com"
         )
 
@@ -102,16 +104,24 @@ Available tools:
         tools=tools,
         verbose=True,
         max_iterations=5,
-        # ✅ FIXED: custom message instead of True, prevents NoneType parse crash
         handle_parsing_errors="I completed the requested actions. Please check the tool outputs above for details.",
-        return_intermediate_steps=True,  # ✅ allows fallback summary if output is empty
+        return_intermediate_steps=True,
     )
 
 
-# Build agent at startup
+# ✅ Build agent at startup ONLY if GROQ_API_KEY is already available
+# When running via Robocorp tasks, build_agent() is called directly
+# in run_agent.py AFTER secrets are loaded via load_secrets()
+agent_executor = None
 try:
-    agent_executor = build_agent()
-    logger.info("LangChain agent initialised successfully with Groq")
+    if os.environ.get("GROQ_API_KEY"):
+        agent_executor = build_agent()
+        logger.info("LangChain agent initialised successfully with Groq")
+    else:
+        logger.warning(
+            "GROQ_API_KEY not set at startup - agent not initialised. "
+            "Set it in .env for local run or Vault for Control Room."
+        )
 except Exception as e:
     logger.error("Failed to build agent: " + str(e))
     agent_executor = None
@@ -128,13 +138,12 @@ class AgentResponse(BaseModel):
 
 def extract_output(result: dict) -> str:
     """
-    ✅ Robustly extract final output from agent result.
+    Robustly extract final output from agent result.
     Falls back to intermediate step results if output is empty/None.
     """
     output = result.get("output") or ""
 
     if not output or output.strip() == "":
-        # Build summary from intermediate steps (tool call results)
         steps = result.get("intermediate_steps", [])
         if steps:
             summaries = []
@@ -152,7 +161,7 @@ def health_check():
     return {
         "status":      "ok",
         "service":     "ai-bot",
-        "llm":         "groq/llama-3.3-70b-versatile",  # ✅ updated
+        "llm":         "groq/llama-3.3-70b-versatile",
         "agent_ready": agent_executor is not None,
     }
 
@@ -160,7 +169,7 @@ def health_check():
 @app.get("/")
 def root():
     return {
-        "service": "AI Bot - LangChain Agent (Groq llama-3.3-70b-versatile)",  # ✅ updated
+        "service": "AI Bot - LangChain Agent (Groq llama-3.3-70b-versatile)",
         "endpoints": [
             "GET  /health",
             "POST /run    - run agent with a task string",
