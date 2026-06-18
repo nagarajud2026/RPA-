@@ -10,9 +10,9 @@ Entry point when Robocorp Control Room runs the robot.
   4. test_full_flow  -- smoke test: JIRA + SES together (no LLM)
 
 Important:
-  - First run (no JIRA_TICKET_KEY in .env) → CREATES a new ticket
-  - After first run → add JIRA_TICKET_KEY=MVP-1 to .env
-  - All future runs → UPDATES that same ticket, never creates new ones
+  - First run (no JIRA_TICKET_KEY in .env) -> CREATES a new ticket
+  - After first run -> add JIRA_TICKET_KEY=MVP-1 to .env
+  - All future runs -> UPDATES that same ticket, never creates new ones
 
 Folder structure:
   ai-project-aws/
@@ -43,7 +43,6 @@ from robocorp.tasks import task
 from dotenv import load_dotenv
 
 
-
 # =============================================================================
 # HELPERS
 # =============================================================================
@@ -60,13 +59,6 @@ def load_secrets():
     # Way 1: Robocorp Vault
     try:
         from robocorp import vault
-
-        def load_secrets():
-
-        secret = vault.get_secret("aibotsecrets")
-
-        return secret
-    
         secrets = vault.get_secret("aibotsecrets")
         for key, value in secrets.items():
             os.environ[key] = str(value)
