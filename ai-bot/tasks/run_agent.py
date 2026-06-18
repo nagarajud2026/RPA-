@@ -43,6 +43,7 @@ from robocorp.tasks import task
 from dotenv import load_dotenv
 
 
+
 # =============================================================================
 # HELPERS
 # =============================================================================
@@ -58,7 +59,14 @@ def load_secrets():
 
     # Way 1: Robocorp Vault
     try:
-        from utils.config import get_secret
+        from robocorp import vault
+
+        def load_secrets():
+
+        secret = vault.get_secret("aibotsecrets")
+
+        return secret
+    
         secrets = vault.get_secret("aibotsecrets")
         for key, value in secrets.items():
             os.environ[key] = str(value)
